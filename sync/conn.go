@@ -10,12 +10,12 @@ import (
 )
 
 // Connection 创建一个数据库先关连接
-func Connection(url string) (conn *Conn, err error) {
+func Connection(url string, ctx *SyncCtx) (conn *Conn, err error) {
 	session, err := mgo.Dial(url)
 	if err != nil {
 		return nil, err
 	}
-	return &Conn{Url: url, Session: session}, nil
+	return &Conn{Url: url, Session: session, Ctx: ctx}, nil
 }
 
 // Oplogs query oplog.rs

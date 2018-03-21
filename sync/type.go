@@ -21,6 +21,8 @@ const (
 	ALL_OPS = "*"
 )
 
+var DefaultOpStr = strings.Join([]string{INSERT, UPDATE, DELETE}, ",")
+
 type SyncCtx struct {
 	Src         string
 	Dst         string
@@ -28,6 +30,7 @@ type SyncCtx struct {
 	Limit       int
 	OpStr       string
 	UpdateTsLen int
+	Interval    int
 }
 
 // Conn 封装一个数据库实体
@@ -65,6 +68,7 @@ type Oplog struct {
 }
 
 type OplogsResult struct {
+	Name     string
 	Oplogs   []Oplog
 	BeginTs  bson.MongoTimestamp
 	Limit    int

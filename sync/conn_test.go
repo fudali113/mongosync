@@ -1,7 +1,6 @@
 package sync
 
 import (
-	"strings"
 	"testing"
 )
 
@@ -30,10 +29,9 @@ func TestConn_GetNotDealOplogs(t *testing.T) {
 }
 
 func getConn() *Conn {
-	conn, err := Connection("192.168.30.249:28717")
+	conn, err := Connection("192.168.30.249:28717", &SyncCtx{Name: "test", OpStr: DefaultOpStr})
 	if err != nil {
 		panic(err)
 	}
-	conn.Ctx = &SyncCtx{Name: "test", OpStr: strings.Join([]string{INSERT, UPDATE, DELETE}, ",")}
 	return conn
 }
