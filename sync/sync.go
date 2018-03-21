@@ -15,7 +15,7 @@ func isDone(ctx context.Context) bool {
 }
 
 // Sync 同步两个连接之间的数据
-func Sync(ctx context.Context,src *Conn, dst *Conn) SyncResult {
+func Sync(ctx context.Context, src *Conn, dst *Conn) SyncResult {
 	begin := time.Now()
 	oplogsResult := src.GetNotDealOplogs()
 	oplogsLen := len(oplogsResult.Oplogs)

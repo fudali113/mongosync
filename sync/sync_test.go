@@ -1,11 +1,11 @@
 package sync
 
 import (
-	"testing"
 	"context"
+	"testing"
 )
 
-func Test_isDone(t *testing.T)  {
+func Test_isDone(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	done := isDone(ctx)
 	if done {

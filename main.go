@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"github/fudali113/mongosync/sync"
-	"strings"
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 )
 
@@ -43,7 +43,7 @@ func main() {
 	os.Exit(0)
 }
 
-func checkErr(err error)  {
+func checkErr(err error) {
 	if err != nil {
 		log.Println(err)
 		os.Exit(1)
