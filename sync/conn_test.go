@@ -23,8 +23,8 @@ func TestConn_MongoSyncLog(t *testing.T) {
 
 func TestConn_GetNotDealOplogs(t *testing.T) {
 	conn := getConn()
-	oplogs := conn.GetNotDealOplogs()
-	if len(oplogs) < 2 {
+	oplogsResult := conn.GetNotDealOplogs()
+	if len(oplogsResult.Oplogs) < 2 {
 		t.Error("Conn.GetNotDealOplogs has bug")
 	}
 }
@@ -34,6 +34,6 @@ func getConn() *Conn {
 	if err != nil {
 		panic(err)
 	}
-	conn.Ctx = SyncCtx{Name: "test", OpStr: strings.Join([]string{INSERT, UPDATE, DELETE}, ",")}
+	conn.Ctx = &SyncCtx{Name: "test", OpStr: strings.Join([]string{INSERT, UPDATE, DELETE}, ",")}
 	return conn
 }

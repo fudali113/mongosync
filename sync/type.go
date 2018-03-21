@@ -1,8 +1,10 @@
 package sync
 
 import (
+	"fmt"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"strings"
 	"time"
 )
 
@@ -20,24 +22,34 @@ const (
 )
 
 type SyncCtx struct {
-	Src   string
-	Dst   string
-	Name  string
-	Limit int
-	OpStr string
+	Src         string
+	Dst         string
+	Name        string
+	Limit       int
+	OpStr       string
+	UpdateTsLen int
 }
 
 // Conn 封装一个数据库实体
 type Conn struct {
 	Url     string
-	Ctx     SyncCtx
+	Ctx     *SyncCtx
 	Session *mgo.Session
 }
 
 // SyncResult 同步结果
 type SyncResult struct {
-	Errs  []error
-	Total int64
+	Errs         []SyncError
+	Total        int
+	Begin        time.Time
+	End          time.Time
+	OplogsResult OplogsResult
+}
+
+type SyncError struct {
+	Oplog Oplog
+	Err   error
+	Index int
 }
 
 // Oplogs mongo oplog.rs 实体数据结构
@@ -52,11 +64,40 @@ type Oplog struct {
 	O2 bson.M
 }
 
+type OplogsResult struct {
+	Oplogs   []Oplog
+	BeginTs  bson.MongoTimestamp
+	Limit    int
+	ConnUrl  string
+	Criteria bson.M
+}
+
+type CollInfo struct {
+	C  string
+	DB string
+}
+
+// CollInfo get CollInfo by Oplog.Ns
+func (oplog Oplog) CollInfo() (ci CollInfo, err error) {
+	if oplog.Ns == "" {
+		err = fmt.Errorf("Oplog.Ns is Empty")
+		return
+	}
+	DBAndC := strings.Split(oplog.Ns, ".")
+	if len(DBAndC) != 2 {
+		err = fmt.Errorf("Oplog.Ns is %s , Invalid Format", oplog.Ns)
+		return
+	}
+	ci.DB = DBAndC[0]
+	ci.C = DBAndC[1]
+	return
+}
+
 // MongoSyncLog save mongo sync log
 type MongoSyncLog struct {
 	Id       bson.ObjectId       `bson:"_id"`
 	Dst      string              `bson:"dst"`
 	SyncName string              `bson:"syncName"`
 	Ts       bson.MongoTimestamp `bson:"ts"`
-	CreateAt time.Time           `bson:"createAt"`
+	Time     time.Time           `bson:"createAt"`
 }
