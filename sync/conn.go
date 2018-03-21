@@ -13,7 +13,7 @@ import (
 func Connection(url string, ctx *SyncCtx) (conn *Conn, err error) {
 	session, err := mgo.Dial(url)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("数据库连接失败，url: %s, error: %s", url, err.Error())
 	}
 	return &Conn{Url: url, Session: session, Ctx: ctx}, nil
 }
@@ -56,10 +56,11 @@ func (conn *Conn) MongoSyncLog(syncName string) (log MongoSyncLog) {
 
 func (conn *Conn) saveMongoSyncLog(oplog Oplog) (info *mgo.ChangeInfo, err error) {
 	syncLogColl := conn.Session.DB("local").C("mongo.sync.log")
-	return syncLogColl.Upsert(bson.M{"syncName": conn.Ctx.Name}, MongoSyncLog{
-		Ts:   oplog.Ts,
-		Time: time.Now(),
-		Dst:  conn.Ctx.Dst,
+	return syncLogColl.Upsert(bson.M{"syncName": conn.Ctx.Name}, bson.M{
+		"ts":   oplog.Ts,
+		"time": time.Now(),
+		"dst":  conn.Ctx.Dst,
+		"syncName": conn.Ctx.Name,
 	})
 }
 

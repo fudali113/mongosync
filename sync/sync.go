@@ -2,6 +2,9 @@ package sync
 
 import (
 	"context"
+	"fmt"
+	"gopkg.in/mgo.v2"
+	"log"
 	"time"
 )
 
@@ -17,12 +20,17 @@ func isDone(ctx context.Context) bool {
 // Sync 同步两个连接之间的数据
 func Sync(ctx context.Context, src *Conn, dst *Conn) SyncResult {
 	begin := time.Now()
+	log.Printf("开始一个同步周期, begin: %d", begin.Unix())
+	defer func() {
+		log.Printf("结束一个同步周期, begin: %d, 耗时: %d s", begin.Unix(), time.Now().Unix()-begin.Unix())
+	}()
 	oplogsResult := src.GetNotDealOplogs()
 	oplogsLen := len(oplogsResult.Oplogs)
 	errs := make([]SyncError, 0, 8)
 	for i, oplog := range oplogsResult.Oplogs {
 		err := dst.LoadOplog(oplog)
 		if err != nil {
+			log.Printf("同步出错, err: %s", err.Error())
 			errs = append(errs, SyncError{
 				Err:   err,
 				Index: i,
@@ -30,14 +38,20 @@ func Sync(ctx context.Context, src *Conn, dst *Conn) SyncResult {
 			})
 		}
 		isSaveMongoSyncLog := false
-		if num := i + 1; src.Ctx.UpdateTsLen < 1 || num%src.Ctx.UpdateTsLen == 0 || num == oplogsLen {
-			src.saveMongoSyncLog(oplog)
+		if num := i + 1; src.Ctx.UpdateTsLen < 2 || num%src.Ctx.UpdateTsLen == 0 || num == oplogsLen {
+			_, err := src.saveMongoSyncLog(oplog)
+			if err != nil {
+				log.Printf("index: %d ; 更新 mongo.sync.log 中 ts 字段失败， 严重bug: %s", i, err.Error())
+			} else {
+				log.Printf("index: %d ; 同步了相关 oplog.ts 到 mongo.sync.log", i)
+			}
 			isSaveMongoSyncLog = true
 		}
 		if isDone(ctx) {
 			if !isSaveMongoSyncLog {
 				src.saveMongoSyncLog(oplog)
 			}
+			log.Println("收到 ctx 结束信号， 退出循环并保存 操作时间日志")
 			break
 		}
 	}
@@ -62,16 +76,33 @@ func (conn *Conn) Sync(ctx context.Context, dst *Conn) {
 }
 
 func Run(sCtx SyncCtx) (cancelFunc context.CancelFunc, err error) {
+	err = valid(sCtx)
+	if err != nil {
+		return
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	sCtxPtr := &sCtx
 	src, err := Connection(sCtx.Src, sCtxPtr)
 	if err != nil {
 		return
 	}
+	src.Session.BuildInfo()
+	localNames, _ := src.Session.DB("local").CollectionNames()
+	hasOplogRs := false
+	for _, name := range localNames {
+		if name == "oplog.rs" {
+			hasOplogRs = true
+			break
+		}
+	}
+	if !hasOplogRs {
+		return nil, fmt.Errorf("请确保你的 src 数据库开启了 oplog 功能")
+	}
 	dst, err := Connection(sCtx.Dst, sCtxPtr)
 	if err != nil {
 		return
 	}
+	src.Sync(ctx, dst)
 	go func() {
 		for {
 			select {
@@ -83,4 +114,29 @@ func Run(sCtx SyncCtx) (cancelFunc context.CancelFunc, err error) {
 		}
 	}()
 	return cancel, nil
+}
+
+func valid(ctx SyncCtx) error {
+	src, err := mgo.ParseURL(ctx.Src)
+	if err != nil {
+		return err
+	}
+	dst, err := mgo.ParseURL(ctx.Dst)
+	if err != nil {
+		return err
+	}
+	eqaulAddr := ""
+addr:
+	for _, addr := range src.Addrs {
+		for _, addrByDst := range dst.Addrs {
+			if addr == addrByDst {
+				eqaulAddr = addr
+				break addr
+			}
+		}
+	}
+	if eqaulAddr != "" {
+		return fmt.Errorf("src 与 dst 包含了相同的服务地址: %s", eqaulAddr)
+	}
+	return nil
 }
