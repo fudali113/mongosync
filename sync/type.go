@@ -10,12 +10,13 @@ const (
 	INSERT = "i"
 	UPDATE = "u"
 	DELETE = "d"
-	// db cmd
-	DBCMD = "c"
 	// 声明当前数据库 (其中ns 被设置成为=>数据库名称+ '.')
 	DB = "db"
 	// no op,即空操作，其会定期执行以确保时效性 。
-	NOOP = "n"
+	NO_OP = "n"
+	// db cmd
+	DB_CMD  = "c"
+	ALL_OPS = "*"
 )
 
 type SyncCtx struct {
@@ -23,6 +24,7 @@ type SyncCtx struct {
 	Dst   string
 	Name  string
 	Limit int
+	OpStr string
 }
 
 // Conn 封装一个数据库实体

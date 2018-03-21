@@ -1,10 +1,13 @@
 package sync
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestConn_Oplogs(t *testing.T) {
 	conn := getConn()
-	oplogs := conn.Oplogs(1)
+	oplogs := conn.Oplogs(1, ALL_OPS)
 	if len(oplogs) != 1 {
 		t.Error("Conn.Oplogs has bug")
 	}
@@ -31,6 +34,6 @@ func getConn() *Conn {
 	if err != nil {
 		panic(err)
 	}
-	conn.Ctx = SyncCtx{Name: "test"}
+	conn.Ctx = SyncCtx{Name: "test", OpStr: strings.Join([]string{INSERT, UPDATE, DELETE}, ",")}
 	return conn
 }
