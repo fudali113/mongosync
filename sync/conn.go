@@ -6,18 +6,18 @@ import (
 )
 
 // Connection 创建一个数据库先关连接
-func Connection(url string) (conn *Conn , err error) {
+func Connection(url string) (conn *Conn, err error) {
 	session, err := mgo.Dial(url)
 	if err != nil {
 		return nil, err
 	}
-	return &Conn{Url:url, Session: session}, nil
+	return &Conn{Url: url, Session: session}, nil
 }
 
 // Oplogs query oplog.rs
 // param limit query number
 // param ts    query ts timestamp
-func (conn *Conn) Oplogs(limit int, ts... bson.MongoTimestamp) (oplogs []Oplog) {
+func (conn *Conn) Oplogs(limit int, ts ...bson.MongoTimestamp) (oplogs []Oplog) {
 	oplogColl := conn.Session.DB("local").C("oplog.rs")
 	Criteria := bson.M{}
 	if len(ts) > 0 {

@@ -19,16 +19,16 @@ const (
 )
 
 type SyncCtx struct {
-	Src string
-	Dst string
-	Name string
+	Src   string
+	Dst   string
+	Name  string
 	Limit int
 }
 
 // Conn 封装一个数据库实体
 type Conn struct {
-	Url string
-	Ctx SyncCtx
+	Url     string
+	Ctx     SyncCtx
 	Session *mgo.Session
 }
 
@@ -41,23 +41,20 @@ type SyncResult struct {
 // Oplogs mongo oplog.rs 实体数据结构
 type Oplog struct {
 	Ts bson.MongoTimestamp
-	T int32
-	H int32
-	V int8
+	T  int32
+	H  int32
+	V  int8
 	Op string
 	Ns string
-	O bson.M
+	O  bson.M
 	O2 bson.M
 }
 
 // MongoSyncLog save mongo sync log
 type MongoSyncLog struct {
-	Id bson.ObjectId `bson:"_id"`
-	Dst string		`bson:"dst"`
-	SyncName string `bson:"syncName"`
-	Ts bson.MongoTimestamp `bson:"ts"`
-	CreateAt time.Time `bson:"createAt"`
+	Id       bson.ObjectId       `bson:"_id"`
+	Dst      string              `bson:"dst"`
+	SyncName string              `bson:"syncName"`
+	Ts       bson.MongoTimestamp `bson:"ts"`
+	CreateAt time.Time           `bson:"createAt"`
 }
-
-
-
