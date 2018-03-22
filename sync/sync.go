@@ -29,7 +29,7 @@ func Sync(ctx context.Context, src *Conn, dst *Conn) SyncResult {
 	errs := make([]SyncError, 0, 8)
 	for i, oplog := range oplogsResult.Oplogs {
 		if !needSync(src.Ctx, oplog) {
-			log.Println("不匹配相关信息， 不进行相关同步操作")
+			log.Printf("不匹配相关信息， 不进行相关同步操作, oplog: %#v", oplog)
 			continue
 		}
 		err := dst.LoadOplog(oplog)
