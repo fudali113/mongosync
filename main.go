@@ -15,9 +15,9 @@ const version = 0.1
 func main() {
 	var src, dst, name, opStr string
 	var limit, updateTsLen, interval int
-	flag.StringVar(&src, "src", "localhost:27017", "数据源数据库地址")
-	flag.StringVar(&dst, "dst", "localhost:27017", "目标数据库地址")
-	flag.StringVar(&name, "name", "", "转换上下文的名字; 默认值为 dst 参数")
+	flag.StringVar(&src, "src", "localhost:27017", "数据源数据库地址,支持任何 mongo 官方支持的连接字符串")
+	flag.StringVar(&dst, "dst", "localhost:27017", "目标数据库地址,支持任何 mongo 官方支持的连接字符串")
+	flag.StringVar(&name, "name", "", "转换上下文的名字, 推荐为每个转换设置一个特殊的名字; 默认值为 dst 参数")
 	flag.IntVar(&limit, "limit", 1000, "每次从oplog.rs读取多少条数据进行转化")
 	flag.StringVar(&opStr, "op-str", sync.DefaultOpStr, "加载哪些 op type 的数据进行转换， 默认以 `,` 分割")
 	flag.IntVar(&updateTsLen, "update-ts-len", 10, "转换多少条数据同步一次 mongo.sync.log 里面的 ts 参数， 该 ts 参数用于下次获取数据的起点")

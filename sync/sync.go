@@ -117,6 +117,12 @@ func Run(sCtx SyncCtx) (cancelFunc context.CancelFunc, err error) {
 }
 
 func valid(ctx SyncCtx) error {
+	if ctx.Limit < 1 {
+		return fmt.Errorf("limit 参数不能够小于1， 您的limit参数是: %d", ctx.Limit)
+	}
+	if ctx.Interval < 1 {
+		return fmt.Errorf("interval 参数不能够小于1， 您的 interval 参数是: %d", ctx.Interval)
+	}
 	src, err := mgo.ParseURL(ctx.Src)
 	if err != nil {
 		return err
