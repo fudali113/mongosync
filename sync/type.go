@@ -31,6 +31,8 @@ type SyncCtx struct {
 	OpStr       string
 	UpdateTsLen int
 	Interval    int
+	IncludeNS   []string
+	ExcludeNS   []string
 }
 
 // Conn 封装一个数据库实体

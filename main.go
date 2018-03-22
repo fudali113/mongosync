@@ -7,13 +7,14 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 )
 
 const version = 0.1
 
 func main() {
-	var src, dst, name, opStr string
+	var src, dst, name, opStr, includeNS, excludeNS string
 	var limit, updateTsLen, interval int
 	flag.StringVar(&src, "src", "localhost:27017", "数据源数据库地址,支持任何 mongo 官方支持的连接字符串")
 	flag.StringVar(&dst, "dst", "localhost:27017", "目标数据库地址,支持任何 mongo 官方支持的连接字符串")
@@ -22,6 +23,8 @@ func main() {
 	flag.StringVar(&opStr, "op-str", sync.DefaultOpStr, "加载哪些 op type 的数据进行转换， 默认以 `,` 分割")
 	flag.IntVar(&updateTsLen, "update-ts-len", 10, "转换多少条数据同步一次 mongo.sync.log 里面的 ts 参数， 该 ts 参数用于下次获取数据的起点")
 	flag.IntVar(&interval, "interval", 60, "同步间隔时间; unit: second")
+	flag.StringVar(&includeNS, "includes", "", "只有在此集合中的 NS 才会被同步, 多个可以使用 `，` 分割")
+	flag.StringVar(&excludeNS, "excludes", "", "只有不在此集合中的 NS 才会被同步， 多个可以使用 `，` 分割")
 
 	help := flag.Bool("h", false, "帮助信息")
 	showVersion := flag.Bool("v", false, "版本信息")
@@ -45,6 +48,8 @@ func main() {
 		OpStr:       opStr,
 		UpdateTsLen: updateTsLen,
 		Interval:    interval,
+		IncludeNS:   strings.Split(includeNS, ","),
+		ExcludeNS:   strings.Split(excludeNS, ","),
 	}
 	cancelFunc, err := sync.Run(ctx)
 	checkErr(err)

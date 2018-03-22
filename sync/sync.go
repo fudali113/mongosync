@@ -28,6 +28,10 @@ func Sync(ctx context.Context, src *Conn, dst *Conn) SyncResult {
 	}()
 	errs := make([]SyncError, 0, 8)
 	for i, oplog := range oplogsResult.Oplogs {
+		if !needSync(src.Ctx, oplog) {
+			log.Println("不匹配相关信息， 不进行相关同步操作")
+			continue
+		}
 		err := dst.LoadOplog(oplog)
 		if err != nil {
 			log.Printf("同步出错, err: %s", err.Error())
@@ -70,11 +74,13 @@ func Sync(ctx context.Context, src *Conn, dst *Conn) SyncResult {
 	}
 }
 
+// Sync 执行同步，并将结束存入数据库
 func (conn *Conn) Sync(ctx context.Context, dst *Conn) {
 	syncResult := Sync(ctx, conn, dst)
 	conn.Session.DB("local").C("mongo.sync.result.log").Insert(syncResult)
 }
 
+// Run 根据参数执行同步
 func Run(sCtx SyncCtx) (cancelFunc context.CancelFunc, err error) {
 	err = valid(sCtx)
 	if err != nil {
@@ -116,6 +122,34 @@ func Run(sCtx SyncCtx) (cancelFunc context.CancelFunc, err error) {
 	return cancel, nil
 }
 
+// needSync 判断是否需要执行同步
+func needSync(sc *SyncCtx, oplog Oplog) bool {
+	result := true
+	if len(sc.IncludeNS) > 0 {
+		result = false
+		for _, ns := range sc.IncludeNS {
+			if matchNS(oplog.Ns, ns) {
+				result = true
+			}
+		}
+	}
+	if len(sc.ExcludeNS) > 0 && result {
+		for _, ns := range sc.ExcludeNS {
+			if matchNS(oplog.Ns, ns) {
+				result = false
+			}
+		}
+	}
+	return result
+}
+
+// matchNS 匹配两个是否相同
+// TODO 支持wildcard风格匹配
+func matchNS(src, pattern string) bool {
+	return src == pattern
+}
+
+// valid 验证参数是否有错
 func valid(ctx SyncCtx) error {
 	if ctx.Limit < 1 {
 		return fmt.Errorf("limit 参数不能够小于1， 您的limit参数是: %d", ctx.Limit)
@@ -123,6 +157,8 @@ func valid(ctx SyncCtx) error {
 	if ctx.Interval < 1 {
 		return fmt.Errorf("interval 参数不能够小于1， 您的 interval 参数是: %d", ctx.Interval)
 	}
+
+	// 检查是否 src 与 dst 中有相同的地址
 	src, err := mgo.ParseURL(ctx.Src)
 	if err != nil {
 		return err
@@ -143,6 +179,21 @@ addr:
 	}
 	if eqaulAddr != "" {
 		return fmt.Errorf("src 与 dst 包含了相同的服务地址: %s", eqaulAddr)
+	}
+
+	// 检查 includeNS 与 excludeNS 中是否有相同的元素
+	equalNS := ""
+ns:
+	for _, ns := range ctx.IncludeNS {
+		for _, exNS := range ctx.ExcludeNS {
+			if ns == exNS {
+				equalNS = ns
+				break ns
+			}
+		}
+	}
+	if equalNS != "" {
+		return fmt.Errorf("includes 与 exludes 包含了相同的 NS : %s", equalNS)
 	}
 	return nil
 }
