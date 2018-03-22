@@ -48,8 +48,8 @@ func main() {
 		OpStr:       opStr,
 		UpdateTsLen: updateTsLen,
 		Interval:    interval,
-		IncludeNS:   strings.Split(includeNS, ","),
-		ExcludeNS:   strings.Split(excludeNS, ","),
+		IncludeNS:   splitString(includeNS, ","),
+		ExcludeNS:   splitString(excludeNS, ","),
 	}
 	cancelFunc, err := sync.Run(ctx)
 	checkErr(err)
@@ -63,6 +63,13 @@ func main() {
 	log.Println("exiting, sleep 2 s, wating save log")
 	time.Sleep(time.Second)
 	os.Exit(0)
+}
+
+func splitString(s, sep string) []string {
+	if s == "" {
+		return []string{}
+	}
+	return strings.Split(s, sep)
 }
 
 func checkErr(err error) {
