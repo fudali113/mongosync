@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github/fudali113/mongosync/sync"
+	"github.com/fudali113/mongosync/sync"
 	"log"
 	"os"
 	"os/signal"
