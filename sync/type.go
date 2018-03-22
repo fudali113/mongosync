@@ -85,13 +85,17 @@ type CollInfo struct {
 
 // CollInfo get CollInfo by Oplog.Ns
 func (oplog Oplog) CollInfo() (ci CollInfo, err error) {
-	if oplog.Ns == "" {
+	return collInfo(oplog.Ns)
+}
+
+func collInfo(ns string) (ci CollInfo, err error)  {
+	if ns == "" {
 		err = fmt.Errorf("Oplog.Ns is Empty")
 		return
 	}
-	DBAndC := strings.Split(oplog.Ns, ".")
+	DBAndC := strings.Split(ns, ".")
 	if len(DBAndC) != 2 {
-		err = fmt.Errorf("Oplog.Ns is %s , Invalid Format", oplog.Ns)
+		err = fmt.Errorf("Oplog.Ns is %s , Invalid Format", ns)
 		return
 	}
 	ci.DB = DBAndC[0]

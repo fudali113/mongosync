@@ -23,8 +23,8 @@ func main() {
 	flag.StringVar(&opStr, "op-str", sync.DefaultOpStr, "加载哪些 op type 的数据进行转换， 默认以 `,` 分割")
 	flag.IntVar(&updateTsLen, "update-ts-len", 10, "转换多少条数据同步一次 mongo.sync.log 里面的 ts 参数， 该 ts 参数用于下次获取数据的起点")
 	flag.IntVar(&interval, "interval", 60, "同步间隔时间; unit: second")
-	flag.StringVar(&includeNS, "includes", "", "只有在此集合中的 NS 才会被同步, 多个可以使用 `，` 分割")
-	flag.StringVar(&excludeNS, "excludes", "", "只有不在此集合中的 NS 才会被同步， 多个可以使用 `，` 分割")
+	flag.StringVar(&includeNS, "includes", "", "只有在此集合中的 NS 才会被同步, 多个可以使用 `，` 分割; 可以使用 `dbName.*`（目前只支持这一种格式）只匹配某条数据库下面的 ns")
+	flag.StringVar(&excludeNS, "excludes", "", "只有不在此集合中的 NS 才会被同步， 多个可以使用 `，` 分割； 可以使用 `dbName.*`（目前只支持这一种格式）只匹配某条数据库下面的 ns")
 
 	help := flag.Bool("h", false, "帮助信息")
 	showVersion := flag.Bool("v", false, "版本信息")

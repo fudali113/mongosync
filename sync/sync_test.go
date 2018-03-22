@@ -19,7 +19,11 @@ func Test_isDone(t *testing.T) {
 }
 
 func Test_matchNS(t *testing.T) {
-	result := matchNS("", "")
+	result := matchNS("abc.abc", "abc.abc")
+	if !result {
+		t.Error("matchNS hash bug")
+	}
+	result = matchNS("abc.abc", "abc.*")
 	if !result {
 		t.Error("matchNS hash bug")
 	}
@@ -27,18 +31,20 @@ func Test_matchNS(t *testing.T) {
 
 func Test_needSync(t *testing.T) {
 	ctx := &SyncCtx{
-		IncludeNS: []string{"adc"},
+		IncludeNS: []string{"adc.qq"},
 	}
 	ctx1 := &SyncCtx{
-		ExcludeNS: []string{"adc"},
+		ExcludeNS: []string{"adc.cc"},
 	}
 	ctx2 := &SyncCtx{
 		IncludeNS: []string{},
 		ExcludeNS: []string{},
 	}
-	ctx3 := &SyncCtx{}
-	oplog := Oplog{Ns: "adc"}
-	oplog1 := Oplog{Ns: "abc"}
+	ctx3 := &SyncCtx{
+		IncludeNS:[]string{"abc.*"},
+	}
+	oplog := Oplog{Ns: "adc.qq"}
+	oplog1 := Oplog{Ns: "abc.cc"}
 	need := needSync(ctx, oplog)
 	if !need {
 		t.Error("needSync hash bug 1")
@@ -48,7 +54,7 @@ func Test_needSync(t *testing.T) {
 		t.Error("needSync hash bug 2")
 	}
 	need = needSync(ctx1, oplog)
-	if need {
+	if !need {
 		t.Error("needSync hash bug 3")
 	}
 	need = needSync(ctx1, oplog1)
@@ -64,7 +70,7 @@ func Test_needSync(t *testing.T) {
 		t.Error("needSync hash bug 6")
 	}
 	need = needSync(ctx3, oplog)
-	if !need {
+	if need {
 		t.Error("needSync hash bug 7")
 	}
 	need = needSync(ctx3, oplog1)

@@ -143,9 +143,15 @@ func needSync(sc *SyncCtx, oplog Oplog) bool {
 	return result
 }
 
-// matchNS 匹配两个是否相同
-// TODO 支持wildcard风格匹配
+// matchNS 判断是否匹配
+// 1. 相等
+// 2. db 参数相等， 切 pattern 的集合字段为 *
 func matchNS(src, pattern string) bool {
+	srcInfo, _ := collInfo(src)
+	patternInfo, _ := collInfo(pattern)
+	if patternInfo.C == "*" && srcInfo.DB == patternInfo.DB {
+		return true
+	}
 	return src == pattern
 }
 
@@ -185,7 +191,15 @@ addr:
 	equalNS := ""
 ns:
 	for _, ns := range ctx.IncludeNS {
+		_, err := collInfo(ns)
+		if err != nil {
+			return fmt.Errorf("ns 字符串必须满足 *.* 的格式， 你的 ns 参数是： %s, 解析错误是： %s", ns, err.Error())
+		}
 		for _, exNS := range ctx.ExcludeNS {
+			_, err := collInfo(exNS)
+			if err != nil {
+				return fmt.Errorf("ns 字符串必须满足 *.* 的格式， 你的 ns 参数是： %s, 解析错误是： %s", ns, err.Error())
+			}
 			if ns == exNS {
 				equalNS = ns
 				break ns
