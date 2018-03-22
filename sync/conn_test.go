@@ -23,8 +23,12 @@ func TestConn_MongoSyncLog(t *testing.T) {
 func TestConn_GetNotDealOplogs(t *testing.T) {
 	conn := getConn()
 	oplogsResult := conn.GetNotDealOplogs()
-	if len(oplogsResult.Oplogs) < 2 {
+	oplogs := oplogsResult.Oplogs
+	if len(oplogs) < 2 {
 		t.Error("Conn.GetNotDealOplogs has bug")
+	}
+	if oplogs[0].Ts > oplogs[1].Ts {
+		t.Error("oplogs 排序不正确")
 	}
 }
 

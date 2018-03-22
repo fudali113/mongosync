@@ -2,12 +2,15 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github/fudali113/mongosync/sync"
 	"log"
 	"os"
 	"os/signal"
 	"time"
 )
+
+const version = 0.1
 
 func main() {
 	var src, dst, name, opStr string
@@ -19,7 +22,18 @@ func main() {
 	flag.StringVar(&opStr, "op-str", sync.DefaultOpStr, "加载哪些 op type 的数据进行转换， 默认以 `,` 分割")
 	flag.IntVar(&updateTsLen, "update-ts-len", 10, "转换多少条数据同步一次 mongo.sync.log 里面的 ts 参数， 该 ts 参数用于下次获取数据的起点")
 	flag.IntVar(&interval, "interval", 60, "同步间隔时间; unit: second")
+
+	help := flag.Bool("h", false, "帮助信息")
+	showVersion := flag.Bool("v", false, "版本信息")
 	flag.Parse()
+	if *help {
+		flag.PrintDefaults()
+		return
+	}
+	if *showVersion {
+		fmt.Printf("mongosync version: %g \n", version)
+		return
+	}
 	if name == "" {
 		name = dst
 	}

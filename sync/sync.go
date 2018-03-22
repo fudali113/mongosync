@@ -21,11 +21,11 @@ func isDone(ctx context.Context) bool {
 func Sync(ctx context.Context, src *Conn, dst *Conn) SyncResult {
 	begin := time.Now()
 	log.Printf("开始一个同步周期, begin: %d", begin.Unix())
-	defer func() {
-		log.Printf("结束一个同步周期, begin: %d, 耗时: %d s", begin.Unix(), time.Now().Unix()-begin.Unix())
-	}()
 	oplogsResult := src.GetNotDealOplogs()
 	oplogsLen := len(oplogsResult.Oplogs)
+	defer func() {
+		log.Printf("结束一个同步周期,len: %d, begin: %d, 耗时: %d s", oplogsLen, begin.Unix(), time.Now().Unix()-begin.Unix())
+	}()
 	errs := make([]SyncError, 0, 8)
 	for i, oplog := range oplogsResult.Oplogs {
 		err := dst.LoadOplog(oplog)
@@ -43,7 +43,7 @@ func Sync(ctx context.Context, src *Conn, dst *Conn) SyncResult {
 			if err != nil {
 				log.Printf("index: %d ; 更新 mongo.sync.log 中 ts 字段失败， 严重bug: %s", i, err.Error())
 			} else {
-				log.Printf("index: %d ; 同步了相关 oplog.ts 到 mongo.sync.log", i)
+				log.Printf("index: %d ; 同步了相关 oplog.ts 到 mongo.sync.log , ts: %+v", i, oplog.Ts)
 			}
 			isSaveMongoSyncLog = true
 		}

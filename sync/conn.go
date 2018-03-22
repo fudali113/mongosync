@@ -39,7 +39,7 @@ func oplogsCriteria(opStr string, ts ...bson.MongoTimestamp) bson.M {
 
 func (conn *Conn) oplogs(limit int, criteria bson.M) (oplogs []Oplog) {
 	oplogColl := conn.Session.DB("local").C("oplog.rs")
-	query := oplogColl.Find(criteria).Sort("-ts")
+	query := oplogColl.Find(criteria).Sort("ts")
 	if limit != 0 {
 		query.Limit(limit)
 	}
@@ -57,9 +57,9 @@ func (conn *Conn) MongoSyncLog(syncName string) (log MongoSyncLog) {
 func (conn *Conn) saveMongoSyncLog(oplog Oplog) (info *mgo.ChangeInfo, err error) {
 	syncLogColl := conn.Session.DB("local").C("mongo.sync.log")
 	return syncLogColl.Upsert(bson.M{"syncName": conn.Ctx.Name}, bson.M{
-		"ts":   oplog.Ts,
-		"time": time.Now(),
-		"dst":  conn.Ctx.Dst,
+		"ts":       oplog.Ts,
+		"time":     time.Now(),
+		"dst":      conn.Ctx.Dst,
 		"syncName": conn.Ctx.Name,
 	})
 }
